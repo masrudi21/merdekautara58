@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kas RT Transparan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Mencegah scroll horizontal dan tarikan refresh pada beberapa browser mobile */
+        body {
+            overscroll-behavior-y: contain;
+        }
+        /* Custom scrollbar untuk tampilan laptop yang lebih rapi */
+        @media (min-width: 1024px) {
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-24 md:pb-8 font-sans antialiased">
+
+    <!-- App Container -->
+    <div id="app">
+        <!-- Header -->
+        <header class="bg-blue-700 text-white p-4 md:p-6 shadow-lg sticky top-0 z-20">
+            <div class="max-w-4xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight">Laporan Kas RT</h1>
+                    <p class="text-xs md:text-sm text-blue-100 italic opacity-90">Transparansi Dana Warga secara Real-time</p>
+                </div>
+                <div id="auth-section">
+                    <button onclick="toggleModal('login-modal')" class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all active:scale-95">
+                        <i data-lucide="log-in" class="w-4 h-4"></i> <span class="hidden sm:inline">Login Bendahara</span><span class="sm:hidden">Login</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+            <!-- Ringkasan Saldo Utama -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-3 bg-white p-6 md:p-10 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div>
+                        <span class="text-slate-500 text-sm font-medium uppercase tracking-wider">Total Saldo Kas</span>
+                        <h2 id="total-balance" class="text-4xl md:text-5xl font-black text-blue-700 mt-1">Rp 0</h2>
+                    </div>
+                    <div class="flex gap-4 md:gap-8 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-8">
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold uppercase">Total Masuk</p>
+                            <p id="total-income" class="text-lg md:text-xl text-blue-600 font-bold">Rp 0</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold uppercase">Total Keluar</p>
+                            <p id="total-expense" class="text-lg md:text-xl text-red-500 font-bold">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Transaksi dengan Desain Card Modern -->
+            <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 md:p-6 bg-slate-50/50 border-b border-slate-200 font-bold flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-slate-700">
+                        <i data-lucide="list-ordered" class="w-5 h-5 text-blue-600"></i> Riwayat Transaksi Terbaru
+                    </div>
+                    <span id="transaction-count" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">0 Data</span>
+                </div>
+                <div id="transaction-list" class="divide-y divide-slate-100 max-h-[60vh] md:max-h-none overflow-y-auto">
+                    <div class="p-12 text-center">
+                        <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+                        <p class="text-slate-400 italic">Menghubungkan ke server...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- FAB: Floating Action Button untuk Mobile -->
+        <button id="fab-add" onclick="toggleModal('add-modal')" class="hidden fixed bottom-6 right-6 md:bottom-10 md:right-10 bg-blue-700 text-white p-5 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all z-30 group">
+            <i data-lucide="plus" class="w-7 h-7 group-hover:rotate-90 transition-transform"></i>
+        </button>
+
+        <!-- Modals -->
+        <!-- Login Modal -->
+        <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 transform transition-all scale-100">
+                <div class="text-center space-y-2">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-blue-700">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800">Akses Pengurus</h3>
+                    <p class="text-sm text-slate-500">Silakan masuk untuk mengelola dana</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
+                        <input type="email" id="login-email" placeholder="Email Bendahara" class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
+                        <input type="password" id="login-password" placeholder="Password" class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 pt-2">
+                    <button id="login-btn" onclick="appAuth.login()" class="w-full py-4 bg-blue-700 text-white rounded-2xl font-bold hover:bg-blue-800 transition-all shadow-lg active:scale-95">Masuk Sekarang</button>
+                    <button onclick="toggleModal('login-modal')" class="w-full py-2 text-slate-500 font-medium text-sm">Kembali sebagai Warga</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Modal -->
+        <div id="add-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-[2.5rem] p-6 md:p-8 w-full max-w-lg space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-slate-800 tracking-tight">Tambah Transaksi</h3>
+                    <button onclick="toggleModal('add-modal')" class="p-2 bg-slate-100 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Jenis Kas</label>
+                        <select id="form-type" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                            <option value="income">Pemasukan (+)</option>
+                            <option value="expense">Pengeluaran (-)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Tanggal</label>
+                        <input type="date" id="form-date" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Jumlah (Rupiah)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-4 font-bold text-slate-400">Rp</span>
+                        <input type="number" id="form-amount" placeholder="0" class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Keterangan Keperluan</label>
+                    <textarea id="form-description" placeholder="Contoh: Iuran Bulanan, Perbaikan Lampu Jalan..." rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                </div>
+
+                <button id="save-btn" onclick="appData.add()" class="w-full py-5 bg-blue-700 text-white rounded-[1.5rem] font-bold hover:bg-blue-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 mt-4">
+                    <i data-lucide="save" class="w-5 h-5"></i> Simpan Data Kas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Script (Bertindak sebagai Server & Database) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Server (Firebase)
+        // Menggunakan variabel global yang disediakan lingkungan iFrame
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyA0JVTlPODjVcyF7QP7Ox2D5QJYwwue9VI",
+            authDomain: "kas-rt58-merdeka.firebaseapp.com",
+            projectId: "kas-rt58-merdeka",
+            storageBucket: "kas-rt58-merdeka.firebasestorage.app",
+            messagingSenderId: "574942270994",
+            appId: "1:574942270994:web:d2dfde504ca5c19ff5aacb",
+            measurementId: "G-VY79LPX384"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'app-rt-transparan';
+
+        // Inisialisasi Koneksi ke Server
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let allTransactions = [];
+
+        // UI Helpers
+        window.toggleModal = (id) => {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        };
+
+        const formatRupiah = (num) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        };
+
+        // Otentikasi (Sistem Keamanan Server)
+        window.appAuth = {
+            login: async () => {
+                const btn = document.getElementById('login-btn');
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-password').value;
+                
+                if (!email || !pass) return alert("Harap isi email dan password.");
+                
+                btn.disabled = true;
+                btn.innerText = "Memverifikasi...";
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    toggleModal('login-modal');
+                    document.getElementById('login-email').value = '';
+                    document.getElementById('login-password').value = '';
+                } catch (err) {
+                    alert("Gagal Masuk: Akun tidak ditemukan atau password salah.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Masuk Sekarang";
+                }
+            },
+            logout: () => {
+                if(confirm("Keluar dari Mode Bendahara?")) signOut(auth);
+            }
+        };
+
+        // Listener Status User (Login/Logout)
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            const authSection = document.getElementById('auth-section');
+            const fab = document.getElementById('fab-add');
+            
+            if (user && !user.isAnonymous) {
+                // Tampilan untuk Pengurus (Admin)
+                authSection.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="hidden md:block text-right">
+                            <p class="text-[10px] uppercase font-bold text-blue-200 leading-none">Bendahara Aktif</p>
+                            <p class="text-xs font-medium truncate max-w-[120px]">${user.email}</p>
+                        </div>
+                        <button onclick="appAuth.logout()" class="flex items-center gap-2 bg-red-500/20 px-4 py-2 rounded-xl text-sm font-bold border border-red-500/40 hover:bg-red-500/30 transition-all">
+                            <i data-lucide="log-out" class="w-4 h-4 text-red-300"></i> <span class="hidden sm:inline text-white">Keluar</span>
+                        </button>
+                    </div>
+                `;
+                fab.classList.remove('hidden');
+            } else {
+                // Tampilan untuk Warga (Guest)
+                if (!user) signInAnonymously(auth); // Pastikan warga tetap terkoneksi secara anonim untuk membaca data
+                authSection.innerHTML = `
+                    <button onclick="toggleModal('login-modal')" class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all active:scale-95">
+                        <i data-lucide="log-in" class="w-4 h-4"></i> <span class="hidden sm:inline">Login Bendahara</span><span class="sm:hidden">Login</span>
+                    </button>
+                `;
+                fab.classList.add('hidden');
+            }
+            lucide.createIcons();
+            renderList();
+        });
+
+        // Sinkronisasi Data Real-time (Fungsi Utama Server)
+        const transRef = collection(db, 'artifacts', appId, 'public', 'data', 'kas_transactions');
+
+        // Mendengarkan perubahan data di server secara real-time
+        onSnapshot(transRef, (snapshot) => {
+            allTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            // Urutkan berdasarkan tanggal transaksi
+            allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            updateStats();
+            renderList();
+        }, (err) => {
+            console.error("Server Error:", err);
+            document.getElementById('transaction-list').innerHTML = `<div class="p-8 text-center text-red-500 italic font-medium">Koneksi ke server terputus. Silakan muat ulang.</div>`;
+        });
+
+        const updateStats = () => {
+            const stats = allTransactions.reduce((acc, curr) => {
+                const val = Number(curr.amount);
+                if (curr.type === 'income') { acc.inc += val; acc.bal += val; }
+                else { acc.exp += val; acc.bal -= val; }
+                return acc;
+            }, { bal: 0, inc: 0, exp: 0 });
+
+            document.getElementById('total-balance').textContent = formatRupiah(stats.bal);
+            document.getElementById('total-income').textContent = formatRupiah(stats.inc);
+            document.getElementById('total-expense').textContent = formatRupiah(stats.exp);
+            document.getElementById('transaction-count').textContent = `${allTransactions.length} Data`;
+        };
+
+        const renderList = () => {
+            const listEl = document.getElementById('transaction-list');
+            if (allTransactions.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-16 text-center">
+                        <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <i data-lucide="inbox" class="w-8 h-8"></i>
+                        </div>
+                        <p class="text-slate-400 font-medium italic">Belum ada catatan transaksi kas.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            listEl.innerHTML = allTransactions.map(trx => `
+                <div class="group p-5 md:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div class="flex gap-4 md:gap-6">
+                        <div class="p-3 md:p-4 rounded-2xl h-12 w-12 md:h-14 md:w-14 flex items-center justify-center flex-shrink-0 ${trx.type === 'income' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}">
+                            <i data-lucide="${trx.type === 'income' ? 'arrow-down-left' : 'arrow-up-right'}" class="w-6 h-6"></i>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <p class="font-bold text-slate-800 text-sm md:text-base leading-tight mb-1">${trx.description}</p>
+                            <div class="flex items-center gap-3">
+                                <span class="flex items-center gap-1 text-[10px] md:text-xs text-slate-400 font-medium">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i> ${new Date(trx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 md:gap-6">
+                        <p class="font-black text-right text-sm md:text-lg ${trx.type === 'income' ? 'text-blue-600' : 'text-red-600'}">
+                            ${trx.type === 'income' ? '+' : '-'}${formatRupiah(trx.amount).replace('Rp', '').trim()}
+                        </p>
+                        ${currentUser && !currentUser.isAnonymous ? `
+                            <button onclick="appData.delete('${trx.id}')" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                <i data-lucide="trash-2" class="w-4 h-4 md:w-5 h-5"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        };
+
+        window.appData = {
+            add: async () => {
+                if (!currentUser || currentUser.isAnonymous) return;
+                const btn = document.getElementById('save-btn');
+                const data = {
+                    type: document.getElementById('form-type').value,
+                    amount: Number(document.getElementById('form-amount').value),
+                    description: document.getElementById('form-description').value,
+                    date: document.getElementById('form-date').value,
+                    addedBy: currentUser.email,
+                    serverTime: serverTimestamp() // Menggunakan waktu server yang presisi
+                };
+
+                if (!data.amount || !data.description || !data.date) {
+                    alert("Harap lengkapi semua data transaksi.");
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerText = "Mengirim...";
+
+                try {
+                    await addDoc(transRef, data);
+                    toggleModal('add-modal');
+                    // Reset form
+                    document.getElementById('form-amount').value = '';
+                    document.getElementById('form-description').value = '';
+                } catch (err) {
+                    alert("Gagal menyimpan: Terjadi kendala pada server.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Simpan Data Kas`;
+                    lucide.createIcons();
+                }
+            },
+            delete: async (id) => {
+                if (!currentUser || currentUser.isAnonymous) return;
+                if (confirm("Hapus catatan ini secara permanen dari server?")) {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'kas_transactions', id));
+                    } catch (err) {
+                        alert("Gagal menghapus data.");
+                    }
+                }
+            }
+        };
+
+        // Set tanggal default hari ini
+        document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+        lucide.createIcons();
+    </script>
+</body>
+</html>
